@@ -3,7 +3,7 @@
 
 
 def canUnlockAll(boxes):
-    """ Coment """
+    """ Some stuff """
     box = len(boxes) * [False]
     box[0] = True
     keys = [0]
