@@ -1,99 +1,139 @@
+#include <stdlib.h>
 #include "binary_trees.h"
 /**
- * binary_tree_size - pre-order traversal
- * @tree: node.
- * Return: nothing.
+ * _height - measures the sum of heights of a binary tree
+ * @tree: pointer to the root node of the tree to measure the height
+ *
+ * Return: Height or 0 if tree is NULL
  */
-size_t binary_tree_size(const binary_tree_t *tree)
+int _height(const binary_tree_t *tree)
 {
-	size_t size;
+	size_t height_l = 0;
+	size_t height_r = 0;
 
 	if (!tree)
-		return (0);
-	size = 1 + binary_tree_size(tree->left) + binary_tree_size(tree->right);
-	return (size);
+		return (-1);
+
+	height_l = _height(tree->left);
+	height_r = _height(tree->right);
+
+	if (height_l > height_r)
+		return (height_l + 1);
+	return (height_r + 1);
 }
 /**
- * numt - number to string
- * @num: size of tree
- * @base: base to convert
- * Return: result string
+ * greater_than_parent - check if child is greather than parent to check
+ * @father: Node parent of the inserting node
+ * @son: Node inserted to check with the parent
+ * Return: Not return, only order the tree in a heap
  */
-char *numt(unsigned long int num, int base)
+void greater_than_parent(heap_t **father, heap_t **son)
 {
-	static char *repre, buffer[50];
-	char *binary;
+	heap_t *f, *child, *n_child, *n_left, *n_right, *parent;
+	int gtp;
 
-	repre = "01";
-
-	binary = &buffer[49];
-	*binary = 0;
-
-	while (num)
+	f = *father, child = *son;
+	if (child->n > f->n)
 	{
-		binary--;
-		*binary = repre[num % base];
-		num /= base;
-	}
-	return (binary);
-}
-/**
- * insert_node - insert the new node
- * @root: double pointer 
- * @node: new node insert
- */
-void insert_node(heap_t **root, heap_t *node)
-{
-	char bin, *binary;
-	unsigned int idx, size;
-	heap_t *aux = NULL;
-
-	aux = *root;
-	size = binary_tree_size(aux) + 1;
-	binary = numt(size, 2);
-	for (idx = 1; idx < strlen(binary); idx++)
-	{
-		bin = binary[idx];
-		if (idx == strlen(binary) - 1)
+		if (child->left)
+			child->left->parent = f;
+		if (child->right)
+			child->right->parent = f;
+		if (f->left == child)
+			n_child = f->right, gtp = 0;
+		else
+			n_child = f->left, gtp = 1;
+		n_left = child->left, n_right = child->right;
+		if (gtp == 0)
 		{
-			if (bin == '1')
-				aux->right = node;
-			if (bin == '0')
-				aux->left = node;
-			node->parent = aux;
+			child->right = n_child;
+			if (n_child)
+				n_child->parent = child;
+			child->left = f;
 		}
-		else if (bin == '1')
-			aux = aux->right;
-		else if (bin == '0')
-			aux = aux->left;
+		else
+		{
+			child->left = n_child;
+			if (n_child)
+				n_child->parent = child;
+			child->right = f;
+		}
+		if (f->parent)
+		{
+			if (f->parent->left == f)
+				f->parent->left = child;
+			else
+				f->parent->right = child;
+		}
+		parent = f->parent, child->parent = parent;
+		f->parent = child, f->left = n_left;
+		f->right = n_right, *father = child;
 	}
 }
 /**
- * heap_insert - inserts a value into a Max 
- * @root: double pointer to the root node
- * @value: value store in the node to be inserted
- * Return:  pointer, or NULL on failure
+ * is_perfect - check if the subtrees has the same height
+ * and check for each subtree be perfect
+ * @root: Tree or subtree to check
+ * Return: 1 if subtree or tree is perfect or not
+ */
+int is_perfect(const binary_tree_t *root)
+{
+	if (root && _height(root->left) == _height(root->right))
+	{
+		if (_height(root->left) == -1)
+			return (1);
+		if ((root->left && !((root->left)->left)
+		     && !((root->left)->right))
+		    && (root->right && !((root->right)->left)
+			&& !((root->right)->right)))
+			return (1);
+		if (root && root->left && root->right)
+			return (is_perfect(root->left)
+				&& is_perfect(root->right));
+	}
+	return (0);
+}
+/**
+ * heap_insert - function that inserts a value in Max Binary Heap
+ * @root: double pointer to the root f of the Heap to insert the value
+ * @value: is the value to store in the f to be inserted
+ * Return: NULL on failure
  */
 heap_t *heap_insert(heap_t **root, int value)
 {
-	heap_t *new_node = NULL;
-	int n;
+	heap_t *new;
 
-	if (!root)
-		return (NULL);
-	new_node = binary_tree_node(NULL, value);
-	if (!(*root))
+	if (*root == NULL)
 	{
-		*root = new_node;
-		return (new_node);
+		*root = binary_tree_node(NULL, value);
+		return (*root);
 	}
-	insert_node(root, new_node);
-	while (new_node->parent && new_node->n > new_node->parent->n)
+	if (is_perfect(*root) || !is_perfect((*root)->left))
 	{
-		n = new_node->parent->n;
-		new_node->parent->n = new_node->n;
-		new_node->n = n;
-		new_node = new_node->parent;
+		if ((*root)->left)
+		{
+			new = heap_insert(&((*root)->left), value);
+			greater_than_parent(root, &((*root)->left));
+			return (new);
+		}
+		else
+		{
+			new = (*root)->left = binary_tree_node(*root, value);
+			greater_than_parent(root, &((*root)->left));
+			return (new);
+		}
 	}
-	return (new_node);
+	if ((*root)->right)
+	{
+		new = heap_insert(&((*root)->right), value);
+		greater_than_parent(root, (&(*root)->right));
+		return (new);
+	}
+	else
+	{
+		new = (*root)->right = binary_tree_node(*root, value);
+		greater_than_parent(root, &((*root)->right));
+		return (new);
+	}
+	return (NULL);
 }
