@@ -1,26 +1,57 @@
 #!/usr/bin/python3
-
+"""
+Write a script that reads stdin line by line and computes metrics:
+"""
 import sys
 
-file_size = 0
-stats = {"200": 0, "301": 0, "400": 0, "401": 0,
-         "403": 0, "404": 0, "405": 0, "500": 0}
 
-try:
-    for i, line in enumerate(sys.stdin, 1):
-        split_args = line.split(" ")
-        if len(split_args) < 2:
-            continue
-        if split_args[-2] in stats:
-            stats[split_args[-2]] = stats[split_args[-2]] + 1
-        file_size = file_size + eval(split_args[-1])
-        if i % 10 == 0:
-            print("File size: {}".format(file_size))
-            for key in sorted(stats.keys()):
-                if stats[key] > 0:
-                    print("{}: {}".format(key, stats[key]))
-finally:
-    print("File size: {}".format(file_size))
-    for key in sorted(stats.keys()):
-        if stats[key] > 0:
-            print("{}: {}".format(key, stats[key]))
+counters = {
+    "size": 0,
+    "lines": 1
+}
+
+contCode = {
+    "200": 0, "301": 0, "400": 0, "401": 0,
+    "403": 0, "404": 0, "405": 0, "500": 0
+}
+
+
+def printCodes():
+    """
+    function print the codes and the number
+    """
+    # print file size
+    print("File size: {}".format(counters["size"]))
+    # print all codes
+    for key in sorted(contCode.keys()):
+        # if a val is not 0
+        if contCode[key] != 0:
+            print("{}: {}".format(key, contCode[key]))
+
+
+def countCodeSize(listData):
+    """
+    count the codes and file size
+    """
+    # count file size
+    counters["size"] += int(listData[-1])
+    # if exists
+    if listData[-2] in contCode:
+        # count status code
+        contCode[listData[-2]] += 1
+
+
+if __name__ == "__main__":
+    try:
+        for line in sys.stdin:
+            try:
+                countCodeSize(line.split(" "))
+            except:
+                pass
+            if counters["lines"] % 10 == 0:
+                printCodes()
+            counters["lines"] += 1
+    except KeyboardInterrupt:
+        printCodes()
+        raise
+    printCodes()
