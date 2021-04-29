@@ -1,121 +1,65 @@
 #!/usr/bin/python3
-
-
+"""
+    N-queen problem
+    The next algo solve any N queen in any NxN
+    Being N > 3
+"""
 import sys
 
 
-def diagonals(results, N):
-    # fill diagonals
-    diagonals = []
-    for i in results:
-        # up-left
-        it_row = i[0]
-        it_col = i[1]
-        while it_col >= 0 and it_col < N and it_row >= 0 and it_row < N:
-            if [it_row, it_col] not in diagonals:
-                diagonals.append([it_row, it_col])
-            it_row -= 1
-            it_col -= 1
-
-        # up-right
-        it_row = i[0]
-        it_col = i[1]
-        while it_col >= 0 and it_col < N and it_row >= 0 and it_row < N:
-            if [it_row, it_col] not in diagonals:
-                diagonals.append([it_row, it_col])
-            it_row -= 1
-            it_col += 1
-
-        # up-right
-        it_row = i[0]
-        it_col = i[1]
-        while it_col >= 0 and it_col < N and it_row >= 0 and it_row < N:
-            if [it_row, it_col] not in diagonals:
-                diagonals.append([it_row, it_col])
-            it_row += 1
-            it_col -= 1
-
-        # down-right
-        it_row = i[0]
-        it_col = i[1]
-        while it_col >= 0 and it_col < N and it_row >= 0 and it_row < N:
-            if [it_row, it_col] not in diagonals:
-                diagonals.append([it_row, it_col])
-            it_row += 1
-            it_col += 1
-
-    return diagonals
-
-
-def isSafe(row, col, results, N):
+def n_q(t_arr, arr, col, i, n):
     """
-    know if safe a position
+       n_q - Find all posibles solution for N-queen problem and return it
+             in a list
+       @t_arr: temporaly list to store the all points of a posible solution
+       @arr: store all the solution
+       @col: save a colum use for a queen
+       @i: the row of the chess table
+       @n: Number of queens
     """
-    # validate columns
-    for _row in range(N):
-        if [_row, col] in results:
-            return False
+    if (i > n):
+        arr.append(t_arr[:])
+        return arr
 
-    return not [row, col] in diagonals(results, N)
+    for j in range(n + 1):
+        if i == 0 or ([i - 1, j - 1] not in t_arr and
+                      [i - 1, j + 1] not in t_arr and
+                      j not in col):
+            if i > 1:
+                dia = 0
+                for k in range(2, i + 1):
+                    if ([i - k, j - k] in t_arr) or ([i - k, j + k] in t_arr):
+                        dia = 1
+                        break
+                if dia:
+                    continue
+            t_arr.append([i, j])
+            col.append(j)
+            n_q(t_arr, arr, col, i + 1, n)
+            col.pop()
+            t_arr.pop()
 
-
-def chess(N):
-    """
-    iterate the positions
-    """
-    result = []
-    row = 0
-    col = 0
-
-    while row < N:
-        while col < N:
-            if isSafe(row, col, result, N):
-                result.append([row, col])
-                break
-            col += 1
-
-        # if a new position not exists in results
-        if len(result) != (row + 1):
-            row -= 1
-            if row < 0:
-                break
-            col = result[row][1] + 1
-            del result[row]
-            continue
-        elif len(result) == N:
-            print(result)
-            col += 1
-            del result[row]
-            continue
-        row += 1
-        col = 0
-
-
-def start():
-    """
-    N queens
-    """
-    args = sys.argv
-
-    # Usage error
-    if len(args) is not 2:
-        print("Usage: nqueens N")
-        sys.exit(1)
-
-    # type value error
-    try:
-        int(args[1])
-    except:
-        print("N must be a number")
-        sys.exit(1)
-
-    # less than 4 error
-    if int(args[1]) < 4:
-        print("N must be at least 4")
-        sys.exit(1)
-
-    N = int(args[1])
-    chess(N)
+    return arr
 
 if __name__ == "__main__":
-    start()
+    if len(sys.argv) != 2:
+        print("Usage: nqueens N")
+        exit(1)
+
+    try:
+        n = int(sys.argv[1])
+    except:
+        print("N must be a number")
+        exit(1)
+
+    if not isinstance(n, int):
+        print("N must be a number")
+        exit(1)
+
+    elif n < 4:
+        print("N must be at least 4")
+        exit(1)
+
+    n_q_arr = n_q([], [], [], 0, n - 1)
+    for i in n_q_arr:
+        print(i)
